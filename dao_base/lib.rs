@@ -1,18 +1,35 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 extern crate alloc;
 use ink_lang as ink;
-pub use self::dao_base::DaoBase;
+pub use self::dao_base::{
+    DaoBase,
+};
 
 #[ink::contract]
 mod dao_base {
 
     use alloc::string::String;
+    use ink_storage::{
+        collections::HashMap as StorageHashMap,
+        traits::{PackedLayout, SpreadLayout},
+    };
+    #[derive(scale::Encode, scale::Decode, Clone, SpreadLayout, PackedLayout)]
+    #[cfg_attr(
+    feature = "std", 
+    derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
+    )]
+    pub struct DaoInfo {
+        owner: AccountId,
+        name: String,
+        synopsis: String,
+        symbol: String,
+    }
     #[ink(storage)]
     pub struct DaoBase {
         owner: AccountId,
         name: String,
-        logo: String,
-        desc: String,
+        synopsis:String,
+        symbol:String,
     }
 
     impl DaoBase {
@@ -21,57 +38,59 @@ mod dao_base {
             Self {
                 owner: Self::env().caller(),
                 name:String::default(),
-                logo:String::default(),
-                desc:String::default(),
+                synopsis:String::default(),
+                symbol:String::default(),
             }
         }
+
         #[ink(message)]
-        pub fn init_base(&mut self, name: String, logo: String, desc: String) {
+        pub fn init_base(&mut self, name: String, synopsis: String, symbol: String) {
             self.set_name(name);
-            self.set_logo(logo);
-            self.set_desc(desc);
-        }
-        #[ink(message)]
-        pub fn set_name(&mut self, name: String) {
-            self.name = String::from(name);
-        }
-        #[ink(message)]
-        pub fn set_logo(&mut self, logo: String) {
-            self.logo = String::from(logo);
-        }
-        #[ink(message)]
-        pub fn set_desc(&mut self, desc: String) {
-            self.desc = String::from(desc);
+            self.set_synopsis(synopsis);
+            self.set_symbol(symbol);
         }
 
+        #[ink(message)]
+        pub fn set_name(&mut self, name: String) {
+            self.name = name;
+        }
+
+        #[ink(message)]
+        pub fn get_name(&self) -> String{
+            self.name.clone()
+        }
+
+        #[ink(message)]
+        pub fn set_synopsis(&mut self, synopsis: String) {
+            self.synopsis = synopsis;
+        }
+
+        #[ink(message)]
+        pub fn get_synopsis(&self) -> String{
+            self.synopsis.clone()
+        }
+
+        #[ink(message)]
+        pub fn set_symbol(&mut self, symbol: String) {
+            self.symbol = symbol;
+        }
+
+        #[ink(message)]
+        pub fn get_symbol(&self) -> String{
+            self.symbol.clone()
+        }
+
+        #[ink(message)]
+        pub fn get_baseInfo(&self) ->DaoInfo{
+            DaoInfo{
+                owner: self.owner,
+                name: self.name.clone(),
+                synopsis: self.synopsis.clone(),
+                symbol: self.symbol.clone(),
+            }
+        }
 
 
 
     }
-
-
-    // #[cfg(test)]
-    // mod tests {
-    //     /// Imports all the definitions from the outer scope so we can use them here.
-    //     use super::*;
-    //
-    //     /// Imports `ink_lang` so we can use `#[ink::test]`.
-    //     use ink_lang as ink;
-    //
-    //     /// We test if the default constructor does its job.
-    //     #[ink::test]
-    //     fn default_works() {
-    //         let dao_base = DaoBase::default();
-    //         assert_eq!(dao_base.get(), false);
-    //     }
-    //
-    //     /// We test a simple use case of our contract.
-    //     #[ink::test]
-    //     fn it_works() {
-    //         let mut dao_base = DaoBase::new(false);
-    //         assert_eq!(dao_base.get(), false);
-    //         dao_base.flip();
-    //         assert_eq!(dao_base.get(), true);
-    //     }
-    // }
 }
