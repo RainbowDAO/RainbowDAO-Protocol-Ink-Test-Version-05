@@ -3,57 +3,49 @@ extern crate alloc;
 use ink_lang as ink;
 
 #[ink::contract]
-mod dao_category {
-
+mod dao_categeory{
     use alloc::string::String;
     use ink_prelude::vec::Vec;
-    use ink_prelude::collections::BTreeMap;
-    use ink_storage::{collections::HashMap as StorageHashMap, };
+    use ink_storage::{
+        collections::HashMap as StorageHashMap,
+    };
 
-    /// Defines the storage of your contract.
-    /// Add new fields to the below struct in order
-    /// to add new static storage fields to your contract.
     #[ink(storage)]
-    pub struct DaoCategory {
-        /// Stores a single `bool` value on the storage.
-        owner: AccountId,
-        category_map:StorageHashMap<u64,String>,
-        index:u64
+    pub struct Daocategeory{
+       owner:AccountId,
+       index:u64,
+       categeorys:StorageHashMap<u64,String>
     }
-
-    impl DaoCategory {
-        /// Constructor that initializes the `bool` value to the given `init_value`.
+    impl  Daocategeory{
         #[ink(constructor)]
-        pub fn new() -> Self {
-            Self {
-                owner: Self::env().caller(),
-                category_map:StorageHashMap::new(),
-                index:0
+        pub fn new()->Self{
+            Self{
+                owner:Self::env().caller(),
+                index:0,
+                categeorys:StorageHashMap::new(),
             }
         }
         #[ink(message)]
-        pub fn add_category(&mut self,name:String) ->  bool {
-            assert_eq!(self.index + 1 > self.index, true);
-            self.category_map.insert(self.index, name);
-            self.index += 1;
+        pub fn add_categeorys(&mut self, categeorys:String)->bool{
+            self.categeorys.insert(self.index,categeorys);
+            self.index +=1;
             true
         }
-
         #[ink(message)]
-        pub fn list_category(&self) -> Vec<String> {
-            let mut category_vec = Vec::new();
-            let mut iter = self.category_map.values();
-            let mut category = iter.next();
-            while category.is_some() {
-                category_vec.push(category.unwrap().clone());
-                category = iter.next();
+        pub fn  list_categeorys(&mut self )-> Vec<String>{
+            let mut categeory_vec=Vec::new();
+            let mut iter=self.categeorys.values();
+            let mut categeory=iter.next();
+            while categeory.is_some(){
+                categeory_vec.push(categeory.unwrap().clone());
+                categeory=iter.next();
             }
-            category_vec
-        }
+            categeory_vec
 
+        }
         #[ink(message)]
-        pub fn query_category_by_index(&self, index: u64) -> String {
-            self.category_map.get(&index).unwrap().clone()
+        pub fn categeorys_by_indexs(&self ,index:u64)->String{
+            self.categeorys.get(&index).unwrap().clone()
         }
     }
 }
