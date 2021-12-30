@@ -2,9 +2,11 @@
 
 extern crate alloc;
 use ink_lang as ink;
-pub use self::template_manager::TemplateManager;
-pub use self::template_manager::DAOTemplate;
 
+pub use self::template_manager::DAOTemplate;
+pub use self::template_manager::{
+    TemplateManager,
+};
 #[ink::contract]
 mod template_manager {
     use alloc::string::String;
@@ -70,8 +72,8 @@ mod template_manager {
             let from = self.env().caller();
             self.template_map.insert(self.template_index, DAOTemplate {
                 id: self.template_index,
+                name, 
                 owner: from,
-                name,
                 dao_manager_code_hash,
                 components,
             });

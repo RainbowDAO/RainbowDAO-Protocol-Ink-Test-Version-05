@@ -41,16 +41,16 @@ mod daoGovnance {
     pub struct DaoGovnance {
         owner: AccountId,
         proposals:StorageHashMap<u64, Proposal>,
-        voting_delay:u32,//延时期
-        voting_period:u32,//投票期
-        proposal_length:u64,//提案集合长度
-        route_addr:AccountId,//路由地址
+        voting_delay:u32,
+        voting_period:u32,
+        proposal_length:u64,
+        route_addr:AccountId,
         rbd_addr:AccountId
     }
 
     #[derive(Debug, PartialEq, Eq, scale::Encode, scale::Decode)]
     #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
-    //提案状态枚举
+   
     pub enum ProposalState {
         Canceled,
         Pending,
@@ -76,7 +76,7 @@ mod daoGovnance {
             Self{
                 owner:Self.env().caller(),
                 proposals:StorageHashMap::new(),
-                voting_delay:86400,//一天
+                voting_delay:86400,
                 voting_period:259200,
                 proposal_length:0,
                 route_addr,
@@ -85,7 +85,7 @@ mod daoGovnance {
 
          
         }
-        //发起提案
+
         #[ink(message)]
         pub fn create_propose(&mut self,title:String )->bool {
 
@@ -161,12 +161,8 @@ mod daoGovnance {
         receipts.has_voted = true;
         receipts.support = support;
         receipts.votes = votes;
-
         true
     }
-
-
     }
-
 
 }

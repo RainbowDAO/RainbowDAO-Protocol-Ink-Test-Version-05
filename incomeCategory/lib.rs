@@ -48,8 +48,8 @@ mod incomeCategory {
                 self.env().transfer(self.super_manager, amount);
 
             }
-            else if types==3{
-                assert_eq!(amount==500,true); 
+            else if types=3{
+                assert!(amount==500); 
                 self.env().transfer(self.super_manager, amount);
             }
             true
