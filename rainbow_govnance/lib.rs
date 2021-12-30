@@ -177,29 +177,4 @@ mod rainbow_govnance {
         }
     }
 
-
-    // #[cfg(test)]
-    // mod tests {
-    //     /// Imports all the definitions from the outer scope so we can use them here.
-    //     use super::*;
-    //
-    //     /// Imports `ink_lang` so we can use `#[ink::test]`.
-    //     use ink_lang as ink;
-    //
-    //     /// We test if the default constructor does its job.
-    //     #[ink::test]
-    //     fn default_works() {
-    //         let rainbowGovnance = RainbowGovnance::default();
-    //         assert_eq!(rainbowGovnance.get(), false);
-    //     }
-    //
-    //     /// We test a simple use case of our contract.
-    //     #[ink::test]
-    //     fn it_works() {
-    //         let mut rainbowGovnance = RainbowGovnance::new(false);
-    //         assert_eq!(rainbowGovnance.get(), false);
-    //         rainbowGovnance.flip();
-    //         assert_eq!(rainbowGovnance.get(), true);
-    //     }
-    // }
 }

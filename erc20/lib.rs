@@ -10,7 +10,6 @@ mod erc20 {
     use alloc::string::String;
     use ink_storage::{
         collections::HashMap as StorageHashMap,
-        lazy::Lazy,
         traits::{
             PackedLayout,
             SpreadLayout,
@@ -31,6 +30,7 @@ mod erc20 {
     }
     /// A simple ERC-20 contract.
     #[ink(storage)]
+    #[derive(Default)]
     pub struct Erc20 {
         /// Total token supply.
         total_supply: Lazy<Balance>,
@@ -136,9 +136,13 @@ mod erc20 {
                 to: Some(owner),
                 value: initial_supply,
             });
+            instance._mint_token(owner, initial_supply);
             instance
         }
-
+        #[ink(constructor)]
+        pub fn default() -> Self {
+            Self::new(Default::default(),Default::default(),Default::default(),Default::default(),Default::default())
+        }
         /// Returns the total token supply.
         #[ink(message)]
         pub fn total_supply(&self) -> Balance {
@@ -191,6 +195,26 @@ mod erc20 {
                 value,
             });
             Ok(())
+        }
+        #[ink(message)]
+        pub fn mint_token_by_owner(
+            &mut self,
+            to: AccountId,
+            value: u64,
+        ) -> bool {
+            let caller = self.env().caller();
+            assert_eq!(caller == self.owner, true);
+            self._mint_token(to, value)
+        }
+        #[ink(message)]
+        pub fn transfer_owner(
+            &mut self,
+            to: AccountId,
+        ) -> bool {
+            let caller = self.env().caller();
+            assert_eq!(caller == self.owner, true);
+            self.owner = to;
+            true
         }
 
         /// Transfers `value` tokens on the behalf of `from` to the account `to`.
@@ -260,24 +284,24 @@ mod erc20 {
             Ok(())
         }
 
-        // fn _mint_token(
-        //     &mut self,
-        //     to: AccountId,
-        //     amount: Balance,
-        // ) -> bool {
-        //     let total_supply = self.total_supply();
-        //     assert_eq!(total_supply + amount >= total_supply, true);
-        //     let to_balance = self.balance_of_or_zero(&to);
-        //     assert_eq!(to_balance + amount >= to_balance, true);
-        //     self.total_supply += amount;
-        //     self.balances.insert(to, to_balance + amount);
-        //     self.env().emit_event(Transfer {
-        //         from: None,
-        //         to: Some(to),
-        //         value: amount,
-        //     });
-        //     true
-        // }
+        fn _mint_token(
+            &mut self,
+            to: AccountId,
+            amount: Balance,
+        ) -> bool {
+            let total_supply = self.total_supply();
+            assert_eq!(total_supply + amount >= total_supply, true);
+            let to_balance = self.balance_of_or_zero(&to);
+            assert_eq!(to_balance + amount >= to_balance, true);
+            self.total_supply += amount;
+            self.balances.insert(to, to_balance + amount);
+            self.env().emit_event(Transfer {
+                from: None,
+                to: Some(to),
+                value: amount,
+            });
+            true
+        }
 
         #[ink(message)]
         pub fn get_current_votes(&self,user:AccountId) -> u128 {

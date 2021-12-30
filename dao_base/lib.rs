@@ -89,8 +89,5 @@ mod dao_base {
                 symbol: self.symbol.clone(),
             }
         }
-
-
-
     }
 }

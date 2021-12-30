@@ -116,7 +116,13 @@ mod multisign {
         #[ink(message)]
         pub fn remove_manager(&mut self,addr: AccountId) -> bool {
             self.caller_is_owner(); 
-            self.manager.contains(&addr)   
+            
+            for i in self.manager{
+                ifself.manager.contains(&addr){
+                    self.manager.remove(i);
+                }
+            }    
+            true           
         }
         ///Is it the owner himself
         fn caller_is_owner(&self) -> bool{
