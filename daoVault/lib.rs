@@ -1,74 +1,201 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use ink_lang as ink;
-
+extern crate alloc;
+pub use self::daoVault::DaoVault;
 #[ink::contract]
 mod daoVault {
+    use alloc::string::String;
+    use alloc::vec::Vec;
+    use erc20::Erc20;
+    use ink_storage::{
+        collections::HashMap as StorageHashMap,
+        traits::{PackedLayout,SpreadLayout},
+    };
 
-    /// Defines the storage of your contract.
-    /// Add new fields to the below struct in order
-    /// to add new static storage fields to your contract.
+    #[derive(
+        Debug, Clone, PartialEq, Eq, scale::Encode, scale::Decode, SpreadLayout, PackedLayout,Default
+        )]
+        #[cfg_attr(
+        feature = "std",
+        derive(::scale_info::TypeInfo, ::ink_storage::traits::StorageLayout)
+        )]
+        pub struct Transfer {
+            transfer_id:u64,
+            transfer_direction:u64,// 1: out 2 : in
+            token_name: String,
+            from_address:AccountId,
+            to_address:AccountId,
+            value: u64,
+            transfer_time:u64,
+        }
+
+    #[derive(
+        Debug, Clone, PartialEq, Eq, scale::Encode, scale::Decode, SpreadLayout, PackedLayout,Default
+        )]
+        #[cfg_attr(
+        feature = "std",
+        derive(::scale_info::TypeInfo, ::ink_storage::traits::StorageLayout)
+        )]
+    pub struct TokenInfo {
+        erc20: AccountId,
+        symbol: String,
+        name: String,
+        balance: u64,
+    }
+
     #[ink(storage)]
     pub struct DaoVault {
-        /// Stores a single `bool` value on the storage.
-        value: bool,
+        value_manager:AccountId,
+        vault_contract_address:AccountId,
+        transfer_history:StorageHashMap<u64,Transfer>,
+
+    }
+
+    #[ink(event)]
+    pub struct AddVaultTokenEvent {
+        #[ink(topic)]
+        token_address: AccountId,
+
+    }
+
+    #[ink(event)]
+    pub struct RemoveVaultTokenEvent {
+        #[ink(topic)]
+        token_address: AccountId,
+
+    }
+
+
+    #[ink(event)]
+    pub struct DepositTokenEvent {
+
+        #[ink(topic)]
+        token_name:String,
+        #[ink(topic)]
+        from_address:AccountId,
+
+        #[ink(topic)]
+        value:u64,
+    }
+
+
+    #[ink(event)]
+    pub struct WithdrawTokenEvent {
+        #[ink(topic)]
+        token_name:String,
+
+        #[ink(topic)]
+        to_address:AccountId,
+
+        #[ink(topic)]
+        value:u64,
     }
 
     impl DaoVault {
-        /// Constructor that initializes the `bool` value to the given `init_value`.
         #[ink(constructor)]
         pub fn new(init_value: bool) -> Self {
-            Self { value: init_value }
+            let contract_address = Self::env().account_id();
+            Self { 
+                value_manager:Self::env().caller(),
+                vault_contract_address:contract_address,
+                transfer_history:StorageHashMap::new(),
+            }
         }
 
-        /// Constructor that initializes the `bool` value to `false`.
-        ///
-        /// Constructors can delegate to other constructors.
+        pub fn get_erc20_by_address(&self, address:AccountId) -> Erc20 {
+            let  erc20_instance: Erc20 = ink_env::call::FromAccountId::from_account_id(address);
+            erc20_instance
+
+
         #[ink(constructor)]
         pub fn default() -> Self {
             Self::new(Default::default())
         }
-
-        /// A message that can be called on instantiated contracts.
-        /// This one flips the value of the stored `bool` from `true`
-        /// to `false` and vice versa.
+        
         #[ink(message)]
-        pub fn flip(&mut self) {
-            self.value = !self.value;
+        pub fn deposit(&mut self, erc_20_address:AccountId, from_address:AccountId,value:u64) -> bool {
+            let to_address = self.vault_contract_address;
+            if self.tokens.contains_key(&erc_20_address){
+                let mut erc_20 = self.get_erc20_by_address(erc_20_address);
+                let token_name=(&erc_20).name();
+                let transfer_result=erc_20.transfer_from(from_address,to_address,value);
+                if transfer_result == false {
+                    return false;
+                }
+                let transfer_id:u64 = (self.transfer_history.len()+1).into();
+                let transfer_time: u64 = self.env().block_timestamp();
+                self.transfer_history.insert(transfer_id,
+                    Transfer{
+                        transfer_direction:2,// 1: out 2: in
+                        token_name:token_name.clone(),
+                        transfer_id:transfer_id,
+                        from_address:from_address,
+                        to_address:to_address,
+                        value,
+                        transfer_time});
+            self.env().emit_event(DepositTokenEvent{
+                token_name: token_name.clone(),
+                from_address:from_address,
+                value:value});
+                true
+        
+            } else{
+                false
+            }
         }
 
-        /// Simply returns the current value of our `bool`.
         #[ink(message)]
-        pub fn get(&self) -> bool {
-            self.value
+        pub fn withdraw(&mut self,erc_20_address:AccountId,to_address:AccountId,value:u64) -> bool {
+            let from_address = self.vault_contract_address;
+            if self.visible_tokens.contains_key(&erc_20_address) {
+                let mut erc_20 = self.get_erc20_by_address(erc_20_address);
+                let token_name=(&erc_20).name();
+                let transfer_result=erc_20.transfer_from(from_address,to_address,value);
+                if transfer_result == false {
+                    return false;
+                }
+                let transfer_id:u64 = (self.transfer_history.len()+1).into();
+
+                let transfer_time: u64 = self.env().block_timestamp();
+
+                self.transfer_history.insert(transfer_id,
+                                             Transfer{
+                                                 transfer_direction:1,// 1: out 2: in
+                                                 token_name: token_name.clone(),
+                                                 transfer_id:transfer_id,
+                                                 from_address:from_address,
+                                                 to_address:to_address,
+                                                 value:value,
+                                                 transfer_time:transfer_time});
+                self.env().emit_event(WithdrawTokenEvent{
+                    token_name: token_name.clone(),
+                    to_address:to_address,
+                    value:value,});
+
+                true
+
+            } else{
+                false
+            }
         }
-    }
-
-    /// Unit tests in Rust are normally defined within such a `#[cfg(test)]`
-    /// module and test functions are marked with a `#[test]` attribute.
-    /// The below code is technically just normal Rust code.
-    #[cfg(test)]
-    mod tests {
-        /// Imports all the definitions from the outer scope so we can use them here.
-        use super::*;
-
-        /// Imports `ink_lang` so we can use `#[ink::test]`.
-        use ink_lang as ink;
-
-        /// We test if the default constructor does its job.
-        #[ink::test]
-        fn default_works() {
-            let daoVault = DaoVault::default();
-            assert_eq!(daoVault.get(), false);
+    
+        #[ink(message)]
+        pub fn add_vault_token(&mut self,erc_20_address:AccountId) -> bool  {
+           let mut self.tokens=self.tokens.insert(erc_20_address,self.vault_contract_address) ;
+           self.env().emit_event(AddVaultTokenEvent{
+            token_address:erc_20_address,
+            });
+           true
         }
-
-        /// We test a simple use case of our contract.
-        #[ink::test]
-        fn it_works() {
-            let mut daoVault = DaoVault::new(false);
-            assert_eq!(daoVault.get(), false);
-            daoVault.flip();
-            assert_eq!(daoVault.get(), true);
+        
+        #[ink(message)]
+        pub fn remove_vault_token(&mut self,erc_20_address: AccountId) -> bool  {
+            let mut self.tokens=self.tokens.remove(erc_20_address);
+            self.env().emit_event(RemoveVaultTokenEvent{
+                token_address:erc_20_address,
+                });
+            true
         }
     }
 }
