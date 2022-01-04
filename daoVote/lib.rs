@@ -75,7 +75,7 @@ mod daoVote {
         #[ink(message)]
         pub fn set_weight_vote(&mut self) {
            // let total_balance = Self::env().balance();
-           let total_balance=self.balance.get(self.env().caller());
+           let total_balance=self.balance.get(&self.env().caller()).unwrap().clone();
             self.balance.insert(self.env().caller(),total_balance);
             if total_balance<100{
                 self.weightVotes.insert(total_balance,1);
