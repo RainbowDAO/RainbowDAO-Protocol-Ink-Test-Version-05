@@ -10,12 +10,14 @@ use ink_lang as ink;
 mod incomeCategory {
     //use ink_prelude::vec::Vec;
     use erc20::Erc20;
+    use daoVault::DaoVault;
     #[ink(storage)]
     pub struct IncomeCategory {
         treasury_vault:u128,
         dao_member_number:u128,
         super_manager:AccountId,
         erc20_instance:Erc20,
+        vault_instance:DaoVault,
     }
 
     impl IncomeCategory {
@@ -28,7 +30,9 @@ mod incomeCategory {
                 super_manager,
                 dao_member_number:0,
                 erc20_instance: Default::default(),
+                vault_instance:Default::default(),
                  }
+                 
         }
         #[ink(constructor)]
         pub fn default() -> Self{
@@ -48,7 +52,7 @@ mod incomeCategory {
                 self.env().transfer(self.super_manager, amount);
 
             }
-            else if types=3{
+            else if types==3{
                 assert!(amount==500); 
                 self.env().transfer(self.super_manager, amount);
             }
@@ -57,10 +61,12 @@ mod incomeCategory {
         }
           ///DCV treasury usage fee 
           #[ink(message)]
-          pub fn using_vault (&mut self,amount:u128)->bool{
-            let from = self.env().caller();
+          pub fn using_vault (&mut self,amount:u128,vault_adrr:AccountId)->bool{
+            // let from = self.env().caller();
+            let adrr=self.get_vault_by_address(vault_adrr);
+            let owner=adrr.value_owner();
             assert_eq!(amount==100,true); 
-            self.env().transfer(self.super_manager, amount);
+            self.env().transfer(owner, amount);
             true
           }
           ///The amount paid is determined by the number of DAO members
@@ -91,9 +97,14 @@ mod incomeCategory {
              let mut numbers=self.dao_member_number;
             // let mut money=(self.treasury_vault)*20/100/numbers;
              let mut money=((self.treasury_vault)*0.2 as u128 )as u64;
-              erc20_instance.transfer_from(from, to, money  );
+              erc20_instance.transfer_from(from, to, money.into() );
              true
          }
+         #[ink(message)]
+         pub fn get_vault_by_address(&self, address:AccountId) -> DaoVault {
+            let  vault_instance: DaoVault = ink_env::call::FromAccountId::from_account_id(address);
+            vault_instance
+        }
 
     }
 
