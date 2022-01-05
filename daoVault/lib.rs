@@ -45,10 +45,12 @@ mod daoVault {
     }
 
     #[ink(storage)]
+    #[derive(Default)]
     pub struct DaoVault {
         value_manager:AccountId,
         vault_contract_address:AccountId,
         transfer_history:StorageHashMap<u64,Transfer>,
+        tokens: StorageHashMap<AccountId, AccountId>,
 
     }
 
@@ -100,13 +102,14 @@ mod daoVault {
                 value_manager:Self::env().caller(),
                 vault_contract_address:contract_address,
                 transfer_history:StorageHashMap::new(),
+                tokens: StorageHashMap::default(),
             }
         }
 
         pub fn get_erc20_by_address(&self, address:AccountId) -> Erc20 {
             let  erc20_instance: Erc20 = ink_env::call::FromAccountId::from_account_id(address);
             erc20_instance
-
+        }
 
         #[ink(constructor)]
         pub fn default() -> Self {
@@ -119,10 +122,10 @@ mod daoVault {
             if self.tokens.contains_key(&erc_20_address){
                 let mut erc_20 = self.get_erc20_by_address(erc_20_address);
                 let token_name=(&erc_20).name();
-                let transfer_result=erc_20.transfer_from(from_address,to_address,value);
-                if transfer_result == false {
-                    return false;
-                }
+                let transfer_result=erc_20.transfer_from(from_address,to_address,value.into());
+                // if transfer_result == false {
+                //     return false;
+                // }
                 let transfer_id:u64 = (self.transfer_history.len()+1).into();
                 let transfer_time: u64 = self.env().block_timestamp();
                 self.transfer_history.insert(transfer_id,
@@ -148,13 +151,13 @@ mod daoVault {
         #[ink(message)]
         pub fn withdraw(&mut self,erc_20_address:AccountId,to_address:AccountId,value:u64) -> bool {
             let from_address = self.vault_contract_address;
-            if self.visible_tokens.contains_key(&erc_20_address) {
+            if self.tokens.contains_key(&erc_20_address) {
                 let mut erc_20 = self.get_erc20_by_address(erc_20_address);
                 let token_name=(&erc_20).name();
-                let transfer_result=erc_20.transfer_from(from_address,to_address,value);
-                if transfer_result == false {
-                    return false;
-                }
+                let transfer_result=erc_20.transfer_from(from_address,to_address,value.into());
+                // if transfer_result == false {
+                //     return false;
+                // }
                 let transfer_id:u64 = (self.transfer_history.len()+1).into();
 
                 let transfer_time: u64 = self.env().block_timestamp();
@@ -182,7 +185,7 @@ mod daoVault {
     
         #[ink(message)]
         pub fn add_vault_token(&mut self,erc_20_address:AccountId) -> bool  {
-           let mut self.tokens=self.tokens.insert(erc_20_address,self.vault_contract_address) ;
+           self.tokens.insert(erc_20_address,self.vault_contract_address);
            self.env().emit_event(AddVaultTokenEvent{
             token_address:erc_20_address,
             });
@@ -191,11 +194,20 @@ mod daoVault {
         
         #[ink(message)]
         pub fn remove_vault_token(&mut self,erc_20_address: AccountId) -> bool  {
-            let mut self.tokens=self.tokens.remove(erc_20_address);
+            let contract_address=self.vault_contract_address;
+            // for(erc_20_address, contract_address) in &self.tokens.into_iter(){
+            //     self.tokens.remove(erc_20_address);
+            // }
+           // self.tokens.insert(erc_20_address,address(0));
+            //self.tokens.remove(erc_20_address);
             self.env().emit_event(RemoveVaultTokenEvent{
                 token_address:erc_20_address,
                 });
             true
+        }
+        #[ink(message)]
+        pub fn value_owner(&self) -> AccountId {
+            self.value_manager.clone()
         }
     }
 }
