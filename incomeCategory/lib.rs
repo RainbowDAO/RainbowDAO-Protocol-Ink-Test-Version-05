@@ -11,6 +11,25 @@ mod incomeCategory {
     //use ink_prelude::vec::Vec;
     use erc20::Erc20;
     use daoVault::DaoVault;
+    use alloc::string::String;
+    use ink_prelude::vec::Vec;
+    use ink_storage::{
+        collections::HashMap as StorageHashMap,
+        traits::{
+            PackedLayout,
+            SpreadLayout,
+        }
+    };
+    #[derive(scale::Encode, scale::Decode, Clone, SpreadLayout, PackedLayout)]
+    #[cfg_attr(
+    feature = "std",
+    derive(scale_info::TypeInfo, ink_storage::traits::StorageLayout)
+    )]
+    #[derive(Debug)]
+    pub struct IncomeInfo {
+       fee: u128,
+       describe:String,
+    }
     #[ink(storage)]
     pub struct IncomeCategory {
         treasury_vault:u128,
@@ -18,12 +37,18 @@ mod incomeCategory {
         super_manager:AccountId,
         erc20_instance:Erc20,
         vault_instance:DaoVault,
+        category:StorageHashMap<String, IncomeInfo>,
+        dao_category:StorageHashMap<u64,String>,
     }
 
     impl IncomeCategory {
         /// Constructor that initializes the `bool` value to the given `init_value`.
         #[ink(constructor)]
         pub fn new(treasury_vault:u128,super_manager:AccountId) -> Self {
+            let mut list=StorageHashMap::new();
+            list.insert(1,String::from("SonDao"));
+            list.insert(2,String::from("independentDao"));
+            list.insert(3,String::from("allianceDao"));
             
             Self { 
                 treasury_vault,
@@ -31,6 +56,9 @@ mod incomeCategory {
                 dao_member_number:0,
                 erc20_instance: Default::default(),
                 vault_instance:Default::default(),
+                category:StorageHashMap::new(),
+                dao_category:list,
+
                  }
                  
         }
@@ -104,6 +132,34 @@ mod incomeCategory {
          pub fn get_vault_by_address(&self, address:AccountId) -> DaoVault {
             let  vault_instance: DaoVault = ink_env::call::FromAccountId::from_account_id(address);
             vault_instance
+        }
+
+        #[ink(message)]
+        pub fn set_category(&mut self,name:String,fee:u128,info:String) -> bool {
+            self.category.insert(name,
+                IncomeInfo{
+                    fee,
+                    describe:info,
+                }
+            );
+            true
+        }
+
+        #[ink(message)]
+        pub fn get_category(&mut self,name:String) -> IncomeInfo {
+           self.category.get(&name).unwrap().clone()
+        }
+        
+        #[ink(message)]
+        pub fn list_category(&self) -> Vec<IncomeInfo> {
+            let mut category_vec = Vec::new();
+            let mut iter = self.category.values();
+            let mut category = iter.next();
+            while category.is_some() {
+                category_vec.push(category.unwrap().clone());
+                category = iter.next();
+            }
+            category_vec
         }
 
     }
