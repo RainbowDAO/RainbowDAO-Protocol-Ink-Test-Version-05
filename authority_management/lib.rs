@@ -59,8 +59,31 @@ mod authority_management{
         }
 
         #[ink(message)]
+        pub fn add_authority(&mut self, name: String) -> bool {
+            assert_eq!(self.env().caller(),self.owner);
+            self.authority_map.insert(self.index, name);
+            self.index += 1;
+            true
+        }
+
+        #[ink(message)]
         pub fn query_authority_by_index(&self, index: u64) -> String {
             self.authority_map.get(&index).unwrap().clone()
+        }
+
+        #[cfg(test)]
+
+        mod tests {
+        use super::*;
+        use ink_lang as ink;
+
+        #[ink::test]
+
+        fn init_works() {
+            let accounts =ink_env::test::default_accounts::<ink_env::DefaultEnvironment>().expect("Cannot get accounts");
+            let mut authority_management = AuthorityManagement::new();
+            authority_management.add_authority(String::from("test"));
+            assert!(authority_management.query_authority_by_index(0)== String::from("test"));
         }
 
     }
