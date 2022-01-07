@@ -43,6 +43,11 @@ mod dao_base {
             }
         }
 
+        #[ink(constructor)]
+        pub fn default() -> Self {
+            Self::new()
+        }
+
         #[ink(message)]
         pub fn init_base(&mut self, name: String, synopsis: String, symbol: String) {
             self.set_name(name);
@@ -79,6 +84,20 @@ mod dao_base {
         pub fn get_symbol(&self) -> String{
             self.symbol.clone()
         }
+        #[ink(message)]
+        pub fn set_owner(&mut self, creator: AccountId) {
+
+            let owner = self.env().caller();
+
+            if self.owner == AccountId::default() || owner == self.owner {
+                self.owner = owner;
+            }
+        }
+
+        #[ink(message)]
+        pub fn get_owner(&self) -> AccountId {
+            self.owner
+        }
 
         #[ink(message)]
         pub fn get_baseInfo(&self) ->DaoInfo{
@@ -90,4 +109,66 @@ mod dao_base {
             }
         }
     }
+
+    #[cfg(test)]
+
+    mod tests {
+        use super::*;
+        use ink_lang as ink;
+
+        #[ink::test]
+        fn test_name() {
+            let mut base = DaoBase::default();
+            base.set_name("DaoBase".to_string());
+            let dbg_msg = format!("name is {}", base.get_name());
+            ink_env::debug_println!("{}", &dbg_msg );
+            assert_eq!(base.get_name(), "DaoBase");
+        }
+
+        #[ink::test]
+        fn test_symbol() {
+            let mut base = DaoBase::default();
+
+            base.set_symbol("https://example.com/logo.jpg".to_string());
+
+            let dbg_msg = format!("logo is {}", base.get_symbol());
+            ink_env::debug_println!("{}", &dbg_msg );
+
+            assert_eq!(base.get_symbol(), "https://example.com/logo.jpg");
+        }
+
+        #[ink::test]
+        fn test_synopsis() {
+            let mut base = DaoBase::default();
+
+            base.set_synopsis("This is DAO information".to_string());
+
+            let dbg_msg = format!("name is {}", base.get_synopsis());
+            ink_env::debug_println!("{}", &dbg_msg );
+
+            assert_eq!(base.get_synopsis(), "This is DAO information");
+        }
+
+        #[ink::test]
+        fn test_all() {
+
+            let accounts =ink_env::test::default_accounts::<ink_env::DefaultEnvironment>().expect("Cannot get accounts");
+
+            let mut base = DaoBase::default();
+
+            base.init_base("DaoBase".to_string(),  "This is DAO information".to_string(),"http://example.com/logo.jpg".to_string());
+
+            let dbg_msg = format!("name is {}", base.get_name());
+            ink_env::debug_println!("{}", &dbg_msg );
+
+            assert_eq!(base.get_name(), "DaoBase");
+            assert_eq!(base.get_symbol(), "http://example.com/logo.jpg");
+            assert_eq!(base.get_synopsis(), "This is DAO information");
+            assert_eq!(base.get_owner(), accounts.alice);
+
+            let dbg_msg2 = format!("name is {:?}", base.get_owner());
+            ink_env::debug_println!("{}", &dbg_msg2 );
+        }
+    }
+
 }
