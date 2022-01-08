@@ -1,8 +1,8 @@
 [package]
-name = "daoGovnance"
+name = "income_category"
 version = "0.1.0"
 authors = ["[your_name] <[your_email]>"]
-edition = "2021"
+edition = "2018"
 
 [dependencies]
 ink_primitives = { version = "3.0.0-rc5", path = "../ink/crates/primitives", default-features = false }
@@ -11,34 +11,36 @@ ink_env = { version = "3.0.0-rc5", path = "../ink/crates/env", default-features 
 ink_prelude = { version = "3.0.0-rc5", path = "../ink/crates/prelude", default-features = false }
 ink_storage = { version = "3.0.0-rc5", path = "../ink/crates/storage", default-features = false }
 ink_lang = { version = "3.0.0-rc5", path = "../ink/crates/lang", default-features = false }
+dao_vault={version = "0.1.0", path = "../daoVault", default-features = false, features =["ink-as-dependency"],overflow-checks = false }
+erc20 = { version = "0.1.0", path = "../erc20", default-features = false, features =["ink-as-dependency"],overflow-checks = false }
 
 scale = { package = "parity-scale-codec", version = "2.0.1", default-features = false, features = ["derive"] }
-scale-info = { version = "1", default-features = false, features = ["derive"], optional = true }
-
-erc20 = { version = "0.1.0", path = "../erc20", default-features = false, features =["ink-as-dependency"] }
-core = { version = "0.1.0", path = "../core", default-features = false, features = ["ink-as-dependency"] }
-
+scale-info = { version = "1.0.0", default-features = false, features = ["derive"], optional = true }
 
 [lib]
-name = "daoGovnance"
+name = "income_category"
 path = "lib.rs"
 crate-type = [
+    # Used for normal contract Wasm blobs.
     "cdylib",
+    # Used for ABI generation.
     "rlib",
 ]
+
+[profile.release]
+overflow-checks = false
+
 [features]
 default = ["std"]
 std = [
     "ink_metadata/std",
     "ink_env/std",
     "ink_storage/std",
-    "ink_prelude/std",
     "ink_primitives/std",
+    "erc20/std",
+    "dao_vault/std",
     "scale/std",
     "scale-info/std",
-    "erc20/std",
-    "core/std",
-  
 
 ]
 ink-as-dependency = []

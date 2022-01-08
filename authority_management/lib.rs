@@ -33,8 +33,8 @@ mod authority_management{
                 authority_map : StorageHashMap::new(),
             }
         }
-
-        fn only_core(&self,sender:AccountId) {
+        #[ink(message)]
+        pub fn only_core(&self,sender:AccountId) {
             assert_eq!(self.owner, sender);
         }
 
@@ -58,33 +58,26 @@ mod authority_management{
             authority_vec
         }
 
-        #[ink(message)]
-        pub fn add_authority(&mut self, name: String) -> bool {
-            assert_eq!(self.env().caller(),self.owner);
-            self.authority_map.insert(self.index, name);
-            self.index += 1;
-            true
-        }
 
         #[ink(message)]
         pub fn query_authority_by_index(&self, index: u64) -> String {
             self.authority_map.get(&index).unwrap().clone()
         }
-
+    }
         #[cfg(test)]
 
         mod tests {
-        use super::*;
-        use ink_lang as ink;
+            use super::*;
+            use ink_lang as ink;
 
-        #[ink::test]
+            #[ink::test]
 
-        fn init_works() {
-            let accounts =ink_env::test::default_accounts::<ink_env::DefaultEnvironment>().expect("Cannot get accounts");
-            let mut authority_management = AuthorityManagement::new();
-            authority_management.add_authority(String::from("test"));
-            assert!(authority_management.query_authority_by_index(0)== String::from("test"));
+            fn init_works() {
+                let accounts =ink_env::test::default_accounts::<ink_env::DefaultEnvironment>().expect("Cannot get accounts");
+                let mut authority_management = AuthorityManagement::new();
+                authority_management.add_authority(String::from("test"));
+                assert!(authority_management.query_authority_by_index(0)== String::from("test"));
+            }
+
         }
-
-    }
 }

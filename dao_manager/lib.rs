@@ -14,8 +14,8 @@ mod dao_manager {
     use template_manager::DAOTemplate;
     use ink_prelude::vec::Vec;
     use ink_prelude::collections::BTreeMap;
-    //use vault::VaultManager;
-    //use vote_manager::VoteManager;
+    use dao_vault::DaoVault;
+    use dao_vote::DaoVote;
     use ink_storage::{
         // collections::HashMap as StorageHashMap,
         traits::{PackedLayout, SpreadLayout},   
@@ -47,6 +47,8 @@ mod dao_manager {
         pub base_addr: Option<AccountId>,
         // erc20 module contract's address
         pub erc20_addr: Option<AccountId>,
+        pub dao_vault: Option<DaoVault>,
+        pub dao_vote: Option<DaoVote>,
     }
 
     #[derive(

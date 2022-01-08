@@ -1,12 +1,9 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 extern crate alloc;
-pub use self::multisign::{
-    Multisign,
-};
 use ink_lang as ink;
 
 #[ink::contract]
-mod multisign {
+mod multi_sign {
     use alloc::string::String;
     //Defining a mutable array
     use ink_prelude::vec::Vec;
@@ -116,20 +113,20 @@ mod multisign {
         #[ink(message)]
         pub fn remove_manager(&mut self,addr: AccountId) -> bool {
             self.caller_is_owner(); 
-            
-            for i in self.manager{
-                ifself.manager.contains(&addr){
-                    self.manager.remove(i);
-                }
-            }    
+            //add_manager(addr);
+            // sort(self.manager.begin(),self.manager.end());
+            // self.manager.erase(unique(self.manager.begin(),self.manager.end(),self.manager.end()));
             true           
         }
+        #[ink(message)]
         ///Is it the owner himself
-        fn caller_is_owner(&self) -> bool{
+        pub fn caller_is_owner(&self) -> bool{
             self.owner == self.env().caller()
         }
+        
+        #[ink(message)]
         ///Is it the administrator
-        fn caller_is_manager(&self) -> bool {
+        pub fn caller_is_manager(&self) -> bool {
             let caller = self.env().caller();
             self.manager.contains(&caller) || self.owner == caller
 

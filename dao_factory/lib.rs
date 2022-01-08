@@ -15,6 +15,7 @@ mod dao_factory {
         },
         collections::HashMap as StorageHashMap,
     };
+    //use dao_base::DaoBase;
     use template_manager::TemplateManager;
     use template_manager::DAOTemplate;
     use dao_manager::DAOManager;
@@ -66,9 +67,9 @@ mod dao_factory {
     impl DaoFactory {
         /// Constructor that initializes the `bool` value to the given `init_value`.
         #[ink(constructor)]
-        pub fn new() -> Self {
+        pub fn new(controller: AccountId) -> Self {
             Self {
-                owner: Self::env().caller(),
+                owner: controller,
                 template_addr: None,
                 template: None,
                 instance_index:0,
@@ -79,7 +80,7 @@ mod dao_factory {
 
         #[ink(message)]
         pub fn  init_factory (&mut self, template_code_hash: Hash, version:u8) -> bool
-        {
+            {
             // instance template_manager
             let salt = version.to_le_bytes();
             let instance_params = TemplateManager::new(self.owner)
@@ -89,12 +90,15 @@ mod dao_factory {
                 .params();
             let init_result = ink_env::instantiate_contract(&instance_params);
             let contract_addr = init_result.expect("failed at instantiating the `TemplateManager` contract");
+            /// Creates the contract instance from the account ID of the already instantiated contract.
             let contract_instance = ink_env::call::FromAccountId::from_account_id(contract_addr);
 
             self.template = Some(contract_instance);
             self.template_addr = Some(contract_addr);
             true
         }
+
+        #[ink(message)]
 
         pub fn init_dao_by_template(&mut self, index: u64, controller: AccountId,version: u8) -> bool {
             assert_eq!(self.instance_index + 1 > self.instance_index, true);
@@ -113,6 +117,7 @@ mod dao_factory {
             let dao_init_result = ink_env::instantiate_contract(&dao_instance_params);
             let dao_addr = dao_init_result.expect("failed at instantiating the `DAO Instance` contract");
             let mut dao_instance: DAOManager = ink_env::call::FromAccountId::from_account_id(dao_addr);
+            
             dao_instance.set_template(template);
             self.env().emit_event(InstanceDAO {
                 index: self.instance_index,
@@ -139,6 +144,11 @@ mod dao_factory {
         #[ink(message)]
         pub fn query_template_by_index(&self, index: u64) -> DAOTemplate {
             self.template.as_ref().unwrap().query_template_by_index(index)
+        }
+
+        #[ink(message)]
+        pub fn query_template_addr(&self) -> AccountId {
+            self.template_addr.unwrap()
         }
 
 
