@@ -1,16 +1,16 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 extern crate alloc;
-pub use self::incomeCategory::{
+pub use self::income_category::{
     IncomeCategory,
 };
 
 use ink_lang as ink;
 
 #[ink::contract]
-mod incomeCategory {
+mod income_category {
     //use ink_prelude::vec::Vec;
     use erc20::Erc20;
-    use daoVault::DaoVault;
+    use dao_vault::DaoVault;
     use alloc::string::String;
     use ink_prelude::vec::Vec;
     use ink_storage::{

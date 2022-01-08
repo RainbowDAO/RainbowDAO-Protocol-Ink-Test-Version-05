@@ -2,9 +2,9 @@
 
 use ink_lang as ink;
 extern crate alloc;
-pub use self::daoVault::DaoVault;
+pub use self::dao_vault::DaoVault;
 #[ink::contract]
-mod daoVault {
+mod dao_vault {
     use alloc::string::String;
     use alloc::vec::Vec;
     use erc20::Erc20;
@@ -96,7 +96,7 @@ mod daoVault {
 
     impl DaoVault {
         #[ink(constructor)]
-        pub fn new(init_value: bool) -> Self {
+        pub fn new() -> Self {
             let contract_address = Self::env().account_id();
             Self { 
                 value_manager:Self::env().caller(),

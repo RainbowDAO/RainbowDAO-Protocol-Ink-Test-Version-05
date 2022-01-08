@@ -3,9 +3,12 @@
 use ink_lang as ink;
 
 extern crate alloc;
+pub use self::dao_govnance::{
+    DaoGovnance,
+};
 
 #[ink::contract]
-mod daoGovnance {
+mod dao_govnance {
     use route_manage::RouteManage;
     use erc20::Erc20;
     //use core::Core;

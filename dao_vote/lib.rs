@@ -1,12 +1,12 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 extern crate alloc;
 use ink_lang as ink;
-pub use self::daoVote::{
+pub use self::dao_vote::{
     DaoVote
 };
 
 #[ink::contract]
-mod daoVote {
+mod dao_vote {
     use alloc::string::String;
     use ink_prelude::vec::Vec;
     use erc20::Erc20;
@@ -144,6 +144,7 @@ mod daoVote {
             erc20_instance.approve(user,value);
             true
         }
+    }
 
          /// Unit tests in Rust are normally defined within such a `#[cfg(test)]`
          /// module and test functions are marked with a `#[test]` attribute.
@@ -171,8 +172,7 @@ mod daoVote {
              daoVote.flip();
              assert_eq!(daoVote.get(), true);
         }
-
-        
+    }   
     
-    }
+    
 }
